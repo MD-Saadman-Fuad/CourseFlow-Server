@@ -113,18 +113,49 @@ async function run() {
         });
 
         app.put('/users/:email/courses', async (req, res) => {
-            const email = req.params.email;
-            const course = req.body;
-            const filter = { email: email };
-            db.users.updateMany({ courses: { $exists: false } }, { $set: { courses: [] } });
-            const updateDoc = {
-                $push: { enrolledCourses: course },
-            };
-            const options = { upsert: true };
-            const result = await usersCollection.updateOne(filter, updateDoc, options);
-            res.send(result);
-        });
+            try {
+                console.log('PUT /users/:email/courses', { params: req.params, body: req.body });
 
+                // Defensive: collection must be set
+                if (!usersCollection) {
+                    console.error('usersCollection is not initialized');
+                    return res.status(503).json({ message: 'Server DB not ready' });
+                }
+
+                const email = req.params.email;
+                const { action, courseId } = req.body;
+                if (!email || !action || !courseId) return res.status(400).json({ message: 'Missing params' });
+
+                // Normalize courseId: if you use ObjectId in DB, convert safely
+                let courseIdentifier = courseId;
+                if (typeof courseId === 'string' && ObjectId.isValid(courseId)) {
+                    courseIdentifier = new ObjectId(courseId);
+                }
+                // If your DB stores course ids as plain strings, keep courseIdentifier as string.
+
+                if (action === 'add') {
+                    const result = await usersCollection.findOneAndUpdate(
+                        { email },
+                        { $addToSet: { courses: courseIdentifier } }, // store id consistently
+                        { returnDocument: 'after', upsert: true }
+                    );
+                    return res.json({ ok: true, user: result.value });
+                } else if (action === 'remove') {
+                    const result = await usersCollection.findOneAndUpdate(
+                        { email },
+                        { $pull: { courses: courseIdentifier } },
+                        { returnDocument: 'after' }
+                    );
+                    return res.json({ ok: true, user: result.value });
+                } else {
+                    return res.status(400).json({ message: 'Invalid action' });
+                }
+            } catch (err) {
+                console.error('ERROR in PUT /users/:email/courses', err);
+                console.error('Request details:', { params: req.params, body: req.body });
+                return res.status(500).json({ message: err.message || 'Server error' });
+            }
+        });
         // await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
 
