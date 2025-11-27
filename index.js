@@ -44,11 +44,25 @@ async function run() {
         });
 
         app.get('/courses/:id', async (req, res) => {
-            const id = parseInt(req.params.id);
-            const query = { _id: id };
-            const course = await coursesCollection.findOne(query);
-            // console.log(course);
-            res.send(course);
+            try {
+                const idParam = req.params.id;
+                console.log('Requested course ID:', idParam);
+                let query;
+                if (ObjectId.isValid(idParam)) {
+                    query = { _id: new ObjectId(idParam) };
+                } else if (!isNaN(Number(idParam))) {
+                    query = { _id: Number(idParam) };
+                } else {
+                    return res.status(400).send({ error: 'Invalid id format' });
+                }
+
+                const course = await coursesCollection.findOne(query);
+                if (!course) return res.status(404).send({ error: 'Course not found' });
+                res.send(course);
+            } catch (err) {
+                console.error('Error fetching course:', err);
+                res.status(500).send({ error: 'Internal Server Error' });
+            }
         });
 
         app.post('/courses', async (req, res) => {
