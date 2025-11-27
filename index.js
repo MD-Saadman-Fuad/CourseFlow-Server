@@ -116,6 +116,7 @@ async function run() {
             const email = req.params.email;
             const course = req.body;
             const filter = { email: email };
+            db.users.updateMany({ courses: { $exists: false } }, { $set: { courses: [] } });
             const updateDoc = {
                 $push: { enrolledCourses: course },
             };
