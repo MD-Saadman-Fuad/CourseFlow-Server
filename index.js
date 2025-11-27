@@ -36,7 +36,7 @@ async function run() {
         const usersCollection = db.collection('users');
 
         //courses
-        
+
         app.get('/courses', async (req, res) => {
             const cursor = coursesCollection.find();
             const result = await cursor.toArray();
@@ -98,7 +98,7 @@ async function run() {
                 res.send(result);
             }
         });
-        
+
         app.post('/users', async (req, res) => {
             const newUser = req.body;
             const result = await usersCollection.insertOne(newUser);
