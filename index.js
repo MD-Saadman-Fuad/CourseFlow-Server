@@ -112,7 +112,7 @@ async function run() {
             res.send(result);
         });
 
-        app.put('users/:email/courses', async (req, res) => {
+        app.put('/users/:email/courses', async (req, res) => {
             const email = req.params.email;
             const course = req.body;
             const filter = { email: email };
