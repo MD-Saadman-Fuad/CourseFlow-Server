@@ -112,6 +112,18 @@ async function run() {
             res.send(result);
         });
 
+        app.put('users/:email/courses', async (req, res) => {
+            const email = req.params.email;
+            const course = req.body;
+            const filter = { email: email };
+            const updateDoc = {
+                $push: { enrolledCourses: course },
+            };
+            const options = { upsert: true };
+            const result = await usersCollection.updateOne(filter, updateDoc, options);
+            res.send(result);
+        });
+
         // await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
 
