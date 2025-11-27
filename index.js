@@ -3,7 +3,7 @@ const cors = require('cors');
 require('dotenv').config()
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3001;
 
 
 // middleware
@@ -44,9 +44,10 @@ async function run() {
         });
 
         app.get('/courses/:id', async (req, res) => {
-            const id = req.params.id;
-            const query = { _id: new ObjectId(id) };
+            const id = parseInt(req.params.id);
+            const query = { _id: id };
             const course = await coursesCollection.findOne(query);
+            // console.log(course);
             res.send(course);
         });
 
